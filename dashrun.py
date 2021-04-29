@@ -15,13 +15,15 @@ screen = pygame.display.set_mode(size, 0, 32)
 
 # ? Initialise le joueur
 player_image = pygame.image.load("./assets/player/no_animation.png")
-
 player_location = [50, 50]
+player_y_momentum = 0
+player_entity = pygame.Rect(
+    player_location[0], player_location[1], player_image.get_width(), player_image.get_height())
 
 moving_right = False
 moving_left = False
 
-player_y_momentum = 0
+test_rectangle = pygame.Rect(100, 100, 100, 50)
 
 # ? Boucle du jeu
 while True:
@@ -46,6 +48,14 @@ while True:
         player_y_momentum += 0.2
 
     player_location[1] += player_y_momentum
+
+    player_entity.x = int(player_location[0])
+    player_entity.y = int(player_location[1])
+
+    if player_entity.colliderect(test_rectangle):
+        pygame.draw.rect(screen, (255, 0, 0), test_rectangle)
+    else:
+        pygame.draw.rect(screen, (0, 0, 0), test_rectangle)
 
     for event in pygame.event.get():
         # ? Ferme le programme
