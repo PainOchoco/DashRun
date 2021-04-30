@@ -5,6 +5,8 @@ from pygame.locals import *
 pygame.init()
 clock = pygame.time.Clock()
 
+debug_mode = False
+
 pygame.display.set_caption("Dash Run")
 
 WINDOW_SIZE = (600, 400)
@@ -15,7 +17,6 @@ screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
 display = pygame.Surface((300, 200))
 
 # ? Initialise le joueur
-player_image = pygame.image.load("./assets/player/no_animation.png")
 
 grass_image = pygame.image.load('./assets/grass.png')
 TILE_SIZE = grass_image.get_width()
@@ -37,6 +38,49 @@ def load_map(path):
     return game_map
 
 
+global animation_frames
+animation_frames = {}
+
+
+def load_animation(path, frame_duration):
+    global animation_frames
+    # ? Nom de l'animation (dernier dossier)
+    animation_name = path.split("/")[-1]
+    animation_frame_data = []
+
+    n = 0
+    for frame in frame_duration:
+        animation_frame_id = animation_name + "_" + str(n)
+        img_path = path + "/" + animation_frame_id + ".png"
+        animation_image = pygame.image.load(img_path)
+        animation_frames[animation_frame_id] = animation_image.copy()
+
+        for i in range(frame):
+            animation_frame_data.append(animation_frame_id)
+        n += 1
+
+    return animation_frame_data
+
+
+def change_action(action, frame, new_action):
+    if action != new_action:
+        action = new_action
+        frame = 0
+    return action, frame
+
+
+animation_data = {}
+
+animation_data["idle"] = load_animation(
+    "./assets/player/idle", [10, 10, 10, 10])
+animation_data["run"] = load_animation(
+    "./assets/player/run", [5, 5, 5, 5, 5, 5, 5])
+animation_data["jump"] = load_animation("./assets/player/jump", [1])
+
+player_action = "idle"
+player_frame = 0
+player_flip = False
+
 game_map = load_map("map")
 
 
@@ -51,7 +95,7 @@ def get_hit_tile(rect, tiles):
 def move(rect, movement, tiles):
     collision_types = {"top": False, "bottom": False,
                        "right": False, "left": False}
-    rect.x += movement[0]
+    rect.x += int(movement[0])
 
     hit_list = get_hit_tile(rect, tiles)
 
@@ -84,7 +128,7 @@ air_timer = 0
 true_scroll = [0, 0]
 
 player_rect = pygame.Rect(
-    50, 50, player_image.get_width(), player_image.get_height())
+    50, 50, 11, 33)
 
 background_objects = [[0.25, [120, 10, 70, 400]], [0.25, [280, 30, 40, 400]], [
     0.5, [30, 40, 40, 400]], [0.5, [130, 90, 100, 400]], [0.5, [300, 80, 120, 400]]]
@@ -104,16 +148,18 @@ while True:
     scroll[0] = int(scroll[0])  # ? Arrondie le scroll à l'entier pour que
     scroll[1] = int(scroll[1])  # ? les tiles soient placés au pixel près
 
+    # ? Background
     pygame.draw.rect(display, (7, 80, 75), pygame.Rect(0, 120, 300, 80))
 
     for background_object in background_objects:
         rect_object = pygame.Rect(int(background_object[1][0] - scroll[0] * background_object[0]),
-                                  int(background_object[1][1] - scroll[1] * background_object[0]),
+                                  int(background_object[1][1] -
+                                      scroll[1] * background_object[0]),
                                   background_object[1][2], background_object[1][3])
 
-        if background_object[0] == 0.5:
+        if background_object[0] == 0.5:  # ? 2ème plan
             pygame.draw.rect(display, (14, 222, 150), rect_object)
-        else:
+        else:  # ? 3ème plan
             pygame.draw.rect(display, (9, 91, 85), rect_object)
 
     tile_rects = []
@@ -148,6 +194,28 @@ while True:
     if player_y_momentum > 3:
         player_y_momentum = 3
 
+    # ? animation mouvement vers la droite
+    if player_movement[0] > 0:
+        player_action, player_frame = change_action(
+            player_action, player_frame, "run")
+        player_flip = False
+
+    # ? animation immobile
+    if player_movement[0] == 0:
+        player_action, player_frame = change_action(
+            player_action, player_frame, "idle")
+
+    # ? animation mouvement vers la gauche
+    if player_movement[0] < 0:
+        player_action, player_frame = change_action(
+            player_action, player_frame, "run")
+        player_flip = True
+
+    # ? saut
+    if player_movement[1] < 0:
+        player_action, player_frame = change_action(
+            player_action, player_frame, "jump")
+
     player_rect, collisions = move(
         player_rect, player_movement, tile_rects)
 
@@ -157,8 +225,20 @@ while True:
     else:
         air_timer += 1
 
-    display.blit(
-        player_image, (int(player_rect.x - scroll[0]), int(player_rect.y - scroll[1])))
+    player_frame += 1
+
+    if player_frame >= len(animation_data[player_action]):
+        player_frame = 0
+
+    player_image_id = animation_data[player_action][player_frame]
+    player_image = animation_frames[player_image_id]
+
+    if (debug_mode):
+        pygame.draw.rect(display, (255, 255, 0), pygame.Rect(
+            player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
+
+    display.blit(pygame.transform.flip(
+        player_image, player_flip, False), (int(player_rect.centerx - scroll[0] - 15), int(player_rect.centery - scroll[1] - 22)))
 
     for event in pygame.event.get():
         # ? Ferme le programme
@@ -179,11 +259,17 @@ while True:
                 if air_timer < 6:  # ? Le joueur peut sauter s'il est dans les airs moins de 6 frames
                     # ? Pour pouvoir sauter au bord des plateformes
                     player_y_momentum = -5
-
+            # ? Restart
             if event.key == K_r:
                 player_rect.x = 50
                 player_rect.y = 50
                 player_y_momentum = 0
+
+            if event.key == K_F3:
+                if (debug_mode):
+                    debug_mode = False
+                else:
+                    debug_mode = True
 
         # ? Touche lâchée
         if event.type == KEYUP:
