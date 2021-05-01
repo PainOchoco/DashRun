@@ -21,6 +21,9 @@ display = pygame.Surface((300, 200))
 # ? Charge les textures
 grass_image = pygame.image.load('./assets/textures/grass.png')
 dirt_image = pygame.image.load('./assets/textures/dirt.png')
+plant_image = pygame.image.load("./assets/textures/plant.png")
+
+tile_index = {1: grass_image, 2: dirt_image, 3: plant_image}
 
 # ? Charge les sons et la musique
 # ? https://opengameart.org/content/8-bit-jump-1
@@ -40,20 +43,31 @@ pygame.mixer.music.load("./assets/sounds/music.wav")
 pygame.mixer.music.play(-1)  # ? Joue la musique en boucle
 
 TILE_SIZE = grass_image.get_width()
+CHUNK_SIZE = 8
 
 
-def load_map(path):
-    file = open(path+".txt", "r")  # ? Ouverture du fichier en read mode
-    data = file.read()
-    file.close()
+def generate_chunk(x, y):
+    chunk_data = []
+    for y_pos in range(CHUNK_SIZE):
+        for x_pos in range(CHUNK_SIZE):
+            target_x = x * CHUNK_SIZE + x_pos  # ? position exacte x de la tile
+            target_y = y * CHUNK_SIZE + y_pos  # ? position exacte y de la tile
 
-    rows = data.split("\n")  # ? Divise la map en colonnes
-    game_map = []
+            tile_type = 0  # ? rien (air)
 
-    for row in rows:
-        game_map.append(list(row))
+            if target_y > 10:
+                tile_type = 2  # ? Terre
+            elif target_y == 10:
+                tile_type = 1  # ? Herbe
+            elif target_y == 9:
+                if random.randint(1, 5) == 1:
+                    tile_type = 3  # ? 1/5 chance qu'il y ai une plante au dessus de l'herbe
 
-    return game_map
+            if tile_type != 0:  # ? On ajoute pas l'air
+                # ? Position et type de la tile
+                chunk_data.append([[target_x, target_y], tile_type])
+
+    return chunk_data
 
 
 global animation_frames
@@ -101,7 +115,7 @@ player_flip = False
 
 grass_sound_timer = 0
 
-game_map = load_map("map")
+game_map = {}
 
 
 def get_hit_tile(rect, tiles):
@@ -187,21 +201,25 @@ while True:
 
     tile_rects = []
 
-    y = 0
-    for row in game_map:
-        x = 0
-        for tile in row:
-            if tile == "1":
-                display.blit(dirt_image, (x * TILE_SIZE -
-                                          scroll[0], y * TILE_SIZE - scroll[1]))
-            if tile == "2":
-                display.blit(grass_image, (x * TILE_SIZE -
-                                           scroll[0], y * TILE_SIZE - scroll[1]))
-            if tile != "0":
-                tile_rects.append(pygame.Rect(
-                    x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
-            x += 1
-        y += 1
+    for y in range(3):
+        for x in range(4):
+            target_x = x - 1 + int(round(scroll[0] / (CHUNK_SIZE * TILE_SIZE)))
+            target_y = y - 1 + int(round(scroll[1] / (CHUNK_SIZE * TILE_SIZE)))
+            target_chunk = "{};{}".format(str(target_x), str(target_y))
+
+            if target_chunk not in game_map:
+                game_map[target_chunk] = generate_chunk(target_x, target_y)
+
+            for tile in game_map[target_chunk]:
+                tile_x = tile[0][0] * TILE_SIZE
+                tile_y = tile[0][1] * TILE_SIZE
+
+                display.blit(tile_index[tile[1]],
+                             (tile_x - scroll[0], tile_y - scroll[1]))
+
+                if tile[1] in [1, 2]:  # ? terre ou herbe -> collision
+                    tile_rects.append(pygame.Rect(
+                        tile_x, tile_y, TILE_SIZE, TILE_SIZE))
 
     # ? Affiche le joueur
 
