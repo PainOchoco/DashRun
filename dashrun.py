@@ -1,9 +1,11 @@
 import pygame
 import sys
+import random
 from pygame.locals import *
 
-pygame.init()
 clock = pygame.time.Clock()
+pygame.mixer.pre_init(44100, -16, 2, 512)
+pygame.init()
 
 debug_mode = False
 
@@ -16,12 +18,28 @@ screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
 
 display = pygame.Surface((300, 200))
 
-# ? Initialise le joueur
+# ? Charge les textures
+grass_image = pygame.image.load('./assets/textures/grass.png')
+dirt_image = pygame.image.load('./assets/textures/dirt.png')
 
-grass_image = pygame.image.load('./assets/grass.png')
+# ? Charge les sons et la musique
+# ? https://opengameart.org/content/8-bit-jump-1
+jump_sound = pygame.mixer.Sound("./assets/sounds/jump.wav")
+
+grass_sounds = [pygame.mixer.Sound(
+    "./assets/sounds/grass/grass_0.wav"), pygame.mixer.Sound("./assets/sounds/grass/grass_1.wav")]
+
+# ? Ajustement du volume
+jump_sound.set_volume(0.5)
+grass_sounds[0].set_volume(0.2)
+grass_sounds[1].set_volume(0.2)
+
+
+# ? https://www.youtube.com/watch?v=gJNzwOwPlLE
+pygame.mixer.music.load("./assets/sounds/music.wav")
+pygame.mixer.music.play(-1)  # ? Joue la musique en boucle
+
 TILE_SIZE = grass_image.get_width()
-
-dirt_image = pygame.image.load('./assets/dirt.png')
 
 
 def load_map(path):
@@ -72,14 +90,16 @@ def change_action(action, frame, new_action):
 animation_data = {}
 
 animation_data["idle"] = load_animation(
-    "./assets/player/idle", [10, 10, 10, 10])
+    "./assets/textures/player/idle", [10, 10, 10, 10])
 animation_data["run"] = load_animation(
-    "./assets/player/run", [5, 5, 5, 5, 5, 5, 5])
-animation_data["jump"] = load_animation("./assets/player/jump", [1])
+    "./assets/textures/player/run", [5, 5, 5, 5, 5, 5, 5])
+animation_data["jump"] = load_animation("./assets/textures/player/jump", [1])
 
 player_action = "idle"
 player_frame = 0
 player_flip = False
+
+grass_sound_timer = 0
 
 game_map = load_map("map")
 
@@ -140,6 +160,9 @@ moving_left = False
 while True:
     # ? Efface l'écran
     display.fill((4, 44, 54))
+
+    if grass_sound_timer > 0:
+        grass_sound_timer -= 1
 
     true_scroll[0] += (player_rect.x - true_scroll[0] - 150) / 20
     true_scroll[1] += (player_rect.y - true_scroll[1] - 100) / 20
@@ -222,6 +245,10 @@ while True:
     if collisions["bottom"]:
         player_y_momentum = 0
         air_timer = 0
+
+        if player_movement[0] != 0 and grass_sound_timer == 0:
+            grass_sound_timer = 30
+            random.choice(grass_sounds).play()
     else:
         air_timer += 1
 
@@ -259,6 +286,7 @@ while True:
                 if air_timer < 6:  # ? Le joueur peut sauter s'il est dans les airs moins de 6 frames
                     # ? Pour pouvoir sauter au bord des plateformes
                     player_y_momentum = -5
+                    jump_sound.play()  # ? bioup
             # ? Restart
             if event.key == K_r:
                 player_rect.x = 50
