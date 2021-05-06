@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import engine
 from pygame.locals import *
 
 clock = pygame.time.Clock()
@@ -17,6 +18,7 @@ WINDOW_SIZE = (600, 400)
 screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
 
 display = pygame.Surface((300, 200))
+# debug_menu = pygame.Surface((300, 200), pygame.SRCALPHA)
 
 # ? Charge les textures
 grass_image = pygame.image.load('./assets/textures/grass.png')
@@ -24,6 +26,10 @@ dirt_image = pygame.image.load('./assets/textures/dirt.png')
 plant_image = pygame.image.load("./assets/textures/plant.png")
 
 tile_index = {1: grass_image, 2: dirt_image, 3: plant_image}
+
+FONT_SIZE = 16
+# font = pygame.font.Font("./assets/font.ttf", FONT_SIZE)
+
 
 # ? Charge les sons et la musique
 # ? https://opengameart.org/content/8-bit-jump-1
@@ -70,116 +76,43 @@ def generate_chunk(x, y):
     return chunk_data
 
 
-global animation_frames
-animation_frames = {}
-
-
-def load_animation(path, frame_duration):
-    global animation_frames
-    # ? Nom de l'animation (dernier dossier)
-    animation_name = path.split("/")[-1]
-    animation_frame_data = []
-
-    n = 0
-    for frame in frame_duration:
-        animation_frame_id = animation_name + "_" + str(n)
-        img_path = path + "/" + animation_frame_id + ".png"
-        animation_image = pygame.image.load(img_path)
-        animation_frames[animation_frame_id] = animation_image.copy()
-
-        for i in range(frame):
-            animation_frame_data.append(animation_frame_id)
-        n += 1
-
-    return animation_frame_data
-
-
-def change_action(action, frame, new_action):
-    if action != new_action:
-        action = new_action
-        frame = 0
-    return action, frame
-
-
-animation_data = {}
-
-animation_data["idle"] = load_animation(
-    "./assets/textures/player/idle", [10, 10, 10, 10])
-animation_data["run"] = load_animation(
-    "./assets/textures/player/run", [5, 5, 5, 5, 5, 5, 5])
-animation_data["jump"] = load_animation("./assets/textures/player/jump", [1])
-
-player_action = "idle"
-player_frame = 0
-player_flip = False
+engine.load_animations("./assets/textures/")
 
 grass_sound_timer = 0
 
 game_map = {}
-
-
-def get_hit_tile(rect, tiles):
-    hit_list = []
-    for tile in tiles:
-        if rect.colliderect(tile):
-            hit_list.append(tile)
-    return hit_list
-
-
-def move(rect, movement, tiles):
-    collision_types = {"top": False, "bottom": False,
-                       "right": False, "left": False}
-    rect.x += int(movement[0])
-
-    hit_list = get_hit_tile(rect, tiles)
-
-    for tile in hit_list:
-        if movement[0] > 0:
-            rect.right = tile.left
-            collision_types["right"] = True
-
-        if movement[0] < 0:
-            rect.left = tile.right
-            collision_types["left"] = True
-
-    rect.y += int(movement[1])
-    hit_list = get_hit_tile(rect, tiles)
-
-    for tile in hit_list:
-        if movement[1] > 0:
-            rect.bottom = tile.top
-            collision_types["bottom"] = True
-        elif movement[1] < 0:
-            rect.top = tile.bottom
-            collision_types["top"] = True
-
-    return rect, collision_types
-
 
 player_y_momentum = 0
 air_timer = 0
 
 true_scroll = [0, 0]
 
-player_rect = pygame.Rect(
-    50, 50, 11, 33)
+player = engine.entity(50, 50, 11, 40, "player")
 
-background_objects = [[0.25, [120, 10, 70, 400]], [0.25, [280, 30, 40, 400]], [
-    0.5, [30, 40, 40, 400]], [0.5, [130, 90, 100, 400]], [0.5, [300, 80, 120, 400]]]
 
 moving_right = False
 moving_left = False
+
+background_objects = [[0.25, [120, 10, 70, 400]], [0.25, [280, 30, 40, 400]], [
+    0.5, [30, 40, 40, 400]], [0.5, [130, 90, 100, 400]], [0.5, [300, 80, 120, 400]]]
 
 # ? Boucle du jeu
 while True:
     # ? Efface l'écran
     display.fill((4, 44, 54))
+    # debug_menu.fill((0, 0, 0, 0))
 
     if grass_sound_timer > 0:
         grass_sound_timer -= 1
 
-    true_scroll[0] += (player_rect.x - true_scroll[0] - 150) / 20
-    true_scroll[1] += (player_rect.y - true_scroll[1] - 100) / 20
+    # * just testing
+    # if (true_scroll[0] + (player.x - true_scroll[0] - 150) / 20) >= true_scroll[0] + 1:
+    #     true_scroll[0] += (player.x - true_scroll[0] - 150) / 20
+    # else:
+    #     true_scroll[0] += 1
+
+    true_scroll[0] += (player.x - true_scroll[0] - 150) / 20
+    true_scroll[1] += (player.y - true_scroll[1] - 100) / 20
 
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])  # ? Arrondie le scroll à l'entier pour que
@@ -235,32 +168,27 @@ while True:
     if player_y_momentum > 3:
         player_y_momentum = 3
 
-    # ? animation mouvement vers la droite
-    if player_movement[0] > 0:
-        player_action, player_frame = change_action(
-            player_action, player_frame, "run")
-        player_flip = False
-
     # ? animation immobile
     if player_movement[0] == 0:
-        player_action, player_frame = change_action(
-            player_action, player_frame, "idle")
+        player.set_action("idle")
+
+    # ? animation mouvement vers la droite
+    if player_movement[0] > 0:
+        player.set_action("run")
+        player.set_flip(False)
 
     # ? animation mouvement vers la gauche
     if player_movement[0] < 0:
-        player_action, player_frame = change_action(
-            player_action, player_frame, "run")
-        player_flip = True
+        player.set_action("run")
+        player.set_flip(True)
 
     # ? saut
     if player_movement[1] < 0:
-        player_action, player_frame = change_action(
-            player_action, player_frame, "jump")
+        player.set_action("jump")
 
-    player_rect, collisions = move(
-        player_rect, player_movement, tile_rects)
+    collision_types = player.move(player_movement, tile_rects)
 
-    if collisions["bottom"]:
+    if collision_types["bottom"]:
         player_y_momentum = 0
         air_timer = 0
 
@@ -270,20 +198,8 @@ while True:
     else:
         air_timer += 1
 
-    player_frame += 1
-
-    if player_frame >= len(animation_data[player_action]):
-        player_frame = 0
-
-    player_image_id = animation_data[player_action][player_frame]
-    player_image = animation_frames[player_image_id]
-
-    if (debug_mode):
-        pygame.draw.rect(display, (255, 255, 0), pygame.Rect(
-            player_rect.x - scroll[0], player_rect.y - scroll[1], player_rect.width, player_rect.height))
-
-    display.blit(pygame.transform.flip(
-        player_image, player_flip, False), (int(player_rect.centerx - scroll[0] - 15), int(player_rect.centery - scroll[1] - 22)))
+    player.change_frame(1)
+    player.display(display, scroll)
 
     for event in pygame.event.get():
         # ? Ferme le programme
@@ -307,8 +223,8 @@ while True:
                     jump_sound.play()  # ? bioup
             # ? Restart
             if event.key == K_r:
-                player_rect.x = 50
-                player_rect.y = 50
+                player.x = 50
+                player.y = 50
                 player_y_momentum = 0
 
             if event.key == K_F3:
@@ -326,6 +242,20 @@ while True:
             if event.key == K_LEFT:
                 moving_left = False
 
+    if (debug_mode):
+        # ? https://www.dafont.com/upheaval.font
+        debug_data = [
+            "X:{}".format(player.x),
+            "Y:{}".format(player.y),
+            "FPS:{}".format(int(round(clock.get_fps())))]
+
+        for line in range(len(debug_data)):
+            # ! un peu laggy
+            # debug_img = font.render(debug_data[line], True, (255, 255, 255))
+            # debug_menu.blit(debug_img, (0, line * FONT_SIZE + 3))
+            print(debug_data[line])
+
     screen.blit(pygame.transform.scale(display, WINDOW_SIZE), (0, 0))
+    # screen.blit(pygame.transform.scale(debug_menu, WINDOW_SIZE), (0, 0))
     pygame.display.update()
     clock.tick(60)  # ? 60FPS
