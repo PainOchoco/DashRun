@@ -84,6 +84,7 @@ game_map = {}
 
 player_y_momentum = 0
 air_timer = 0
+timer = 0
 
 true_scroll = [0, 0]
 
@@ -92,12 +93,14 @@ player = engine.entity(50, 50, 11, 40, "player")
 
 moving_right = False
 moving_left = False
+dashing = False
 
 background_objects = [[0.25, [120, 10, 70, 400]], [0.25, [280, 30, 40, 400]], [
     0.5, [30, 40, 40, 400]], [0.5, [130, 90, 100, 400]], [0.5, [300, 80, 120, 400]]]
 
 # ? Boucle du jeu
 while True:
+    timer += 1
     # ? Efface l'écran
     display.fill((4, 44, 54))
     # debug_menu.fill((0, 0, 0, 0))
@@ -161,11 +164,16 @@ while True:
         player_movement[0] += 2
     if moving_left:
         player_movement[0] -= 2
+    if dashing:
+        player_movement[0] += 10
+        print(":D")
+        # dashing = False
 
     player_movement[1] += player_y_momentum
-    player_y_momentum += 0.2
+    if not dashing:
+        player_y_momentum += 0.2
 
-    if player_y_momentum > 3:
+    if player_y_momentum > 3 and not dashing:
         player_y_momentum = 3
 
     # ? animation immobile
@@ -211,6 +219,10 @@ while True:
         if event.type == KEYDOWN:
             # ? ->
             if event.key == K_RIGHT:
+                if timer <= 30:
+                    dashing = True
+                    print(":)")
+                timer = 0
                 moving_right = True
             # ? <-
             if event.key == K_LEFT:
@@ -238,6 +250,7 @@ while True:
             # ? ->
             if event.key == K_RIGHT:
                 moving_right = False
+                dashing = False
             # ? <-
             if event.key == K_LEFT:
                 moving_left = False

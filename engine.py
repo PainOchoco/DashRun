@@ -97,10 +97,6 @@ class cuboid(object):
 # entity stuff
 
 
-def simple_entity(x, y, e_type):
-    return entity(x, y, 1, 1, e_type)
-
-
 def flip(img, boolean=True):
     return pygame.transform.flip(img, boolean, False)
 
