@@ -18,7 +18,6 @@ WINDOW_SIZE = (600, 400)
 screen = pygame.display.set_mode(WINDOW_SIZE, 0, 32)
 
 display = pygame.Surface((300, 200))
-# debug_menu = pygame.Surface((300, 200), pygame.SRCALPHA)
 
 # ? Charge les textures
 grass_image = pygame.image.load('./assets/textures/grass.png')
@@ -28,8 +27,6 @@ plant_image = pygame.image.load("./assets/textures/plant.png")
 tile_index = {1: grass_image, 2: dirt_image, 3: plant_image}
 
 FONT_SIZE = 16
-# font = pygame.font.Font("./assets/font.ttf", FONT_SIZE)
-
 
 # ? Charge les sons et la musique
 # ? https://opengameart.org/content/8-bit-jump-1
@@ -84,7 +81,6 @@ game_map = {}
 
 player_y_momentum = 0
 air_timer = 0
-timer = 0
 
 true_scroll = [0, 0]
 
@@ -93,14 +89,12 @@ player = engine.entity(50, 50, 11, 40, "player")
 
 moving_right = False
 moving_left = False
-dashing = False
 
 background_objects = [[0.25, [120, 10, 70, 400]], [0.25, [280, 30, 40, 400]], [
     0.5, [30, 40, 40, 400]], [0.5, [130, 90, 100, 400]], [0.5, [300, 80, 120, 400]]]
 
 # ? Boucle du jeu
 while True:
-    timer += 1
     # ? Efface l'écran
     display.fill((4, 44, 54))
     # debug_menu.fill((0, 0, 0, 0))
@@ -119,7 +113,7 @@ while True:
 
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])  # ? Arrondie le scroll à l'entier pour que
-    scroll[1] = int(scroll[1])  # ? les tiles soient placés au pixel près
+    scroll[1] = int(scroll[1])  # ? les tiles soient placées au pixel près
 
     # ? Background
     pygame.draw.rect(display, (7, 80, 75), pygame.Rect(0, 120, 300, 80))
@@ -164,16 +158,11 @@ while True:
         player_movement[0] += 2
     if moving_left:
         player_movement[0] -= 2
-    if dashing:
-        player_movement[0] += 10
-        print(":D")
-        # dashing = False
 
     player_movement[1] += player_y_momentum
-    if not dashing:
-        player_y_momentum += 0.2
+    player_y_momentum += 0.2
 
-    if player_y_momentum > 3 and not dashing:
+    if player_y_momentum > 3:
         player_y_momentum = 3
 
     # ? animation immobile
@@ -219,10 +208,6 @@ while True:
         if event.type == KEYDOWN:
             # ? ->
             if event.key == K_RIGHT:
-                if timer <= 30:
-                    dashing = True
-                    print(":)")
-                timer = 0
                 moving_right = True
             # ? <-
             if event.key == K_LEFT:
@@ -250,7 +235,6 @@ while True:
             # ? ->
             if event.key == K_RIGHT:
                 moving_right = False
-                dashing = False
             # ? <-
             if event.key == K_LEFT:
                 moving_left = False

@@ -3,10 +3,6 @@ import math
 import os
 from pygame.locals import *
 
-# physics core
-
-# 2d collisions test
-
 
 def collision_test(rect, tiles):
     hit_list = []
@@ -16,7 +12,6 @@ def collision_test(rect, tiles):
     return hit_list
 
 
-# 2d physics object
 class physics_obj(object):
 
     def __init__(self, x, y, x_size, y_size):
@@ -27,74 +22,60 @@ class physics_obj(object):
         self.y = y
 
     def move(self, movement, tiles):
+
+        collision_types = {'top': False, 'bottom': False, 'right': False,
+                           'left': False, 'data': []}
+
+        # ? Test l'axe X
         self.x += movement[0]
         self.rect.x = int(self.x)
+
         block_hit_list = collision_test(self.rect, tiles)
-        collision_types = {'top': False, 'bottom': False, 'right': False,
-                           'left': False, 'slant_bottom': False, 'data': []}
-        # added collision data to "collision_types". ignore the poorly chosen variable name
+
         for block in block_hit_list:
             markers = [False, False, False, False]
+
+            # ? Mouvement X positif, vers la droite
             if movement[0] > 0:
                 self.rect.right = block.left
                 collision_types['right'] = True
                 markers[0] = True
+
+            # ? Mouvement X négatif, vers la gauche
             elif movement[0] < 0:
                 self.rect.left = block.right
                 collision_types['left'] = True
                 markers[1] = True
+
             collision_types['data'].append([block, markers])
             self.x = self.rect.x
+
+        # ? Test l'axe Y
         self.y += movement[1]
         self.rect.y = int(self.y)
+
         block_hit_list = collision_test(self.rect, tiles)
+
         for block in block_hit_list:
             markers = [False, False, False, False]
+
+            # ? Mouvement Y positif, vers le bas
             if movement[1] > 0:
                 self.rect.bottom = block.top
                 collision_types['bottom'] = True
                 markers[2] = True
+
+            # ? Mouvement Y négatif, vers le haut
             elif movement[1] < 0:
                 self.rect.top = block.bottom
                 collision_types['top'] = True
                 markers[3] = True
+
             collision_types['data'].append([block, markers])
             self.change_y = 0
             self.y = self.rect.y
+
         return collision_types
-
-# 3d collision detection
-# todo: add 3d physics-based movement
-
-
-class cuboid(object):
-
-    def __init__(self, x, y, z, x_size, y_size, z_size):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.x_size = x_size
-        self.y_size = y_size
-        self.z_size = z_size
-
-    def set_pos(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def collidecuboid(self, cuboid_2):
-        cuboid_1_xy = pygame.Rect(self.x, self.y, self.x_size, self.y_size)
-        cuboid_1_yz = pygame.Rect(self.y, self.z, self.y_size, self.z_size)
-        cuboid_2_xy = pygame.Rect(
-            cuboid_2.x, cuboid_2.y, cuboid_2.x_size, cuboid_2.y_size)
-        cuboid_2_yz = pygame.Rect(
-            cuboid_2.y, cuboid_2.z, cuboid_2.y_size, cuboid_2.z_size)
-        if (cuboid_1_xy.colliderect(cuboid_2_xy)) and (cuboid_1_yz.colliderect(cuboid_2_yz)):
-            return True
-        else:
-            return False
-
-# entity stuff
 
 
 def flip(img, boolean=True):
@@ -256,17 +237,23 @@ class entity(object):
             blit_center(surface, image_to_render, (int(
                 self.x)-scroll[0]+self.offset[0]+center_x, int(self.y)-scroll[1]+self.offset[1]+center_y))
 
-# animation stuff
 
+# ? Animations !
 
+# ? La base de données d'animations s'occupe de répertorier les images des animations,
+# * Format : {'path': Surface}
+# * Exemple : {'./assets/textures/player/idle/idle_0': <Surface(32x40x32 SW)>}
 global animation_database
 animation_database = {}
 
+# ? La base de données supérieure s'occupe de répertorier les séquences d'un type d'animation, qui peut être composé de plusieurs ensembles d'animations
+# ? Pour l'animation "idle" du joueur, la base de données stocke les surfaces de animation_database
+# ? Et les répète le nombre de fois qu'une frame dans un type d'animation doit être affichée
+# ? (Renseigné dans assets/textures/animations.txt)
+# * Format : {'entity': {'animation_type': [[set1_animations1, ...], [set1_tag1] ...]}}
+# * Exemple : {'player': {'idle': [['./assets/textures/player/idle/idle_0', ...], ['loop'] ...]}}
 global animation_higher_database
 animation_higher_database = {}
-
-# a sequence looks like [[0,1],[1,1],[2,1],[3,1],[4,2]]
-# the first numbers are the image name(as integer), while the second number shows the duration of it in the sequence
 
 
 def animation_sequence(sequence, base_path):
@@ -289,6 +276,18 @@ def get_frame(ID):
 
 
 def load_animations(path):
+    """
+    Charge les animations spécifiés dans le fichier animations.txt
+
+    Aide pour le fichier animations.txt :
+
+    `Format` : entity_type/animation_type sequence tags
+
+    `Exemple` : player/idle 10,10,10,10 loop 
+
+    ### Paramètres
+    - path: Chemin d'accès au fichier animations.txt 
+    """
     global animation_higher_database
     f = open(path + 'animations.txt', 'r')
     data = f.read()
@@ -310,15 +309,13 @@ def load_animations(path):
             sequence.append([n, int(timing)])
             n += 1
 
-        anim = animation_sequence(sequence, path + animation_path)
+        anim_sequence = animation_sequence(sequence, path + animation_path)
 
         if entity_type not in animation_higher_database:
             animation_higher_database[entity_type] = {}
 
         animation_higher_database[entity_type][animation_id] = [
-            anim.copy(), tags]
-
-# particles
+            anim_sequence.copy(), tags]
 
 
 def particle_file_sort(l):
