@@ -82,7 +82,7 @@ game_map = {}
 player_y_momentum = 0
 air_timer = 0
 
-true_scroll = [0, 0]
+true_scroll = (0, 0)
 
 player = engine.entity(50, 50, 11, 40, "player")
 
