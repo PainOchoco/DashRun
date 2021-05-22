@@ -1,6 +1,9 @@
 import pygame
 import math
 import os
+import random
+import csv
+from settings import *
 from pygame.locals import *
 
 def collision_test(rect, tiles):
@@ -213,6 +216,7 @@ class entity(object):
         - x: `int` Position sur l'axe X
         - y: `int` Position sur l'axe Y
         """
+
         self.x = x
         self.y = y
         self.obj.x = x
@@ -232,6 +236,7 @@ class entity(object):
         ### Retourne
         collision_types: `dict` Types de collisions causées par le mouvement
         """
+
         collision_types = self.obj.move(movement, tiles)
         self.x = self.obj.x
         self.y = self.obj.y
@@ -245,6 +250,7 @@ class entity(object):
         ### Retourne
         Le rectangle de l'entité
         """
+
         return pygame.Rect(self.x, self.y, self.width, self.height)
 
     def set_flip(self, boolean):
@@ -266,6 +272,7 @@ class entity(object):
         - action_id: `str` L'identifiant de l'action
         - force: `bool` Si l'action est reset (retour à la première frame de l'animation)
         """
+
         # ? Si c'est la même action on skip
         if (self.action == action_id) and (force == False):
             pass
@@ -318,6 +325,7 @@ class entity(object):
         ### Arguments
         - image: `surface` Image de l'entité
         """
+
         self.image = image
 
     def set_offset(self, offset):
@@ -328,6 +336,7 @@ class entity(object):
         ### Arguments
         - offset: `tuple` Décalage X et Y
         """
+
         self.offset = offset
 
     def set_frame(self, index):
@@ -338,6 +347,7 @@ class entity(object):
         ### Arguments
         - index: `int` Indice de l'ensemble d'animation actuel
         """
+
         self.animation_frame = index
 
     def handle(self):
@@ -352,6 +362,7 @@ class entity(object):
         ### Arguments
         - amount: `int` Montant
         """
+
         self.animation_frame += amount
         if self.animation != None:
             while self.animation_frame < 0:
@@ -370,6 +381,7 @@ class entity(object):
         ### Description
         Donne l'image actuelle de l'entité
         """
+
         if self.animation == None:
             if self.image != None:
                 return flip(self.image, self.flip)
@@ -383,6 +395,7 @@ class entity(object):
         ### Description
         Donne l'image actuelle de l'entité avec la rotation
         """
+
         image_to_render = None
         if self.animation == None:
             if self.image != None:
@@ -404,12 +417,72 @@ class entity(object):
         - surface: `surface` Surface sur laquelle afficher l'image
         - scroll: `tuple` Scroll actuel du jeu
         """
+        
         image_to_render = self.get_drawn_img()
         center_x = image_to_render.get_width()/2
         center_y = image_to_render.get_height()/2
 
         blit_center(surface, image_to_render, (int(
             self.x)-scroll[0]+self.offset[0]+center_x, int(self.y)-scroll[1]+self.offset[1]+center_y))
+
+
+class player(object):
+    def __init__(self, x, y, size_x, size_y, e_type):
+        self.entity = entity(x, y, size_x, size_y, e_type)
+        self.moving_right = False
+        self.moving_left = False
+        self.dashing = False
+        self.air_timer = 0
+        self.momentum = 0
+        self.movement = [0, 0]
+        self.collision_types = {}
+
+    def update(self, tile_rects):
+        self.movement = [0, 0]
+
+        if self.moving_right:
+            self.movement[0] += SPEED
+        if self.moving_left:
+            self.movement[0] -= SPEED
+
+        self.movement[1] += self.momentum
+        self.momentum += 0.2
+
+        if self.momentum > 3:
+            self.momentum = 3
+        
+        self.animate()
+        self.move(tile_rects)
+        self.entity.change_frame(1)
+
+    def animate(self):
+        
+        # ? animation immobile
+        if self.movement[0] == 0:
+            self.entity.set_action("idle")
+
+        # ? animation mouvement vers la droite
+        if self.movement[0] > 0:
+            self.entity.set_action("run")
+            self.entity.set_flip(False)
+
+        # ? animation mouvement vers la gauche
+        if self.movement[0] < 0:
+            self.entity.set_action("run")
+            self.entity.set_flip(True)
+
+        # ? saut
+        if self.movement[1] < 0:
+            self.entity.set_action("jump")
+        
+    def move(self, tile_rects):
+        self.collision_types = self.entity.move(self.movement, tile_rects)
+
+        if self.collision_types["bottom"]:
+            self.momentum = 0
+            self.air_timer = 0
+        else:
+            self.air_timer += 1
 
 
 # ? Animations !
@@ -453,7 +526,7 @@ def get_frame(ID):
 def load_animations(path):
     """
     ### Description
-    Charge les animations spécifiés dans le fichier animations.txt
+    Charge les animations spécifiés par le fichier animations.txt
 
     ### Arguments
     - path: `str` Chemin d'accès au fichier animations.txt 
@@ -493,68 +566,115 @@ def load_animations(path):
             anim_sequence.copy(), tags]
 
 
-def particle_file_sort(l):
-    l2 = []
-    for obj in l:
-        l2.append(int(obj[:-4]))
-    l2.sort()
-    l3 = []
-    for obj in l2:
-        l3.append(str(obj) + '.png')
-    return l3
+class world():
+    def __init__(self, path, length, tileset):
+        self.length = length
+        self.world_map = {}
+        self.tile_rects = []
+        self.path = path
+        self.map_files = []
+        self.maps = []
+        self.tileset = tileset
+        self.tile_list = tileset.get_tile_list(TILE_SIZE, TILE_SIZE)
+        self.offset = 1
+
+    def generate(self):
+        start = self.load_map("start.csv")
+        self.slice_map(start)
+
+        self.map_files = os.listdir(self.path + "/parts/")
+
+        for i in range(self.length):
+            map = self.load_map("/parts/" + random.choice(self.map_files))
+            self.maps.append(map)
+            self.slice_map(map, self.offset)
+            self.offset += (len(map[0]) / CHUNK_SIZE)
+
+    def load_map(self, file_name):
+        data = list(csv.reader(open(self.path + file_name, "r")))
+        return data
+
+    def load_terrain(self, display, scroll):
+        self.tile_rects = []
+
+        for y in range(3):
+            for x in range(4):
+                target_x = x - 1 + int(round(scroll[0] / (CHUNK_SIZE * TILE_SIZE)))
+                target_y = y - 1 + int(round(scroll[1] / (CHUNK_SIZE * TILE_SIZE)))
+                target_chunk = "{};{}".format(str(target_x), str(target_y))
+
+                if target_chunk not in self.world_map:
+                    self.world_map[target_chunk] = [[4 for x in range(8)] for y in range(8)] # ? empty chunk
+
+                for y_pos in range(CHUNK_SIZE):
+                    for x_pos in range(CHUNK_SIZE):
+                        tile = int(self.world_map[target_chunk][x_pos][y_pos])
+                        tile_x = (target_x * CHUNK_SIZE + x_pos) * TILE_SIZE
+                        tile_y = (target_y * CHUNK_SIZE + y_pos) * TILE_SIZE
+
+                        # if tile != 4:
+                        display.blit(self.tile_list[tile], (tile_x - scroll[0] + 10, tile_y - scroll[1]))
+
+                        if tile not in [4, 9, 14, 19, 23, 24, 28, 29]:
+                            self.tile_rects.append(pygame.Rect(tile_x, tile_y, TILE_SIZE, TILE_SIZE))
+        return self.tile_rects
+    
+    def slice_map(self, map, offset = 0):
+        height = int(len(map) / CHUNK_SIZE)
+        width = int(len(map[0]) / CHUNK_SIZE)
+    
+        for h in range(height):
+            for w in range(width):
+                columns = []
+                for i in range(CHUNK_SIZE):
+                    rows = []
+                    for j in range(CHUNK_SIZE):
+                        rows.append(map[j + h * CHUNK_SIZE][i + w * CHUNK_SIZE])
+                    columns.append(rows)
+    
+                chunk_name = "{};{}".format(int(w + offset), h)
+                self.world_map[chunk_name] = columns
+
+class Tileset():
+    def __init__(self, path):
+        self.image = pygame.image.load(path)
+
+    def get_tile(self, x, y, w, h):
+        tile = pygame.Surface((w, h))
+        tile.blit(self.image, (0, 0), (x, y, w, h))    
+        return tile
+
+    def get_tile_list(self, w, h):
+        tiles = []
+        for height in range(int(self.image.get_height() / h)):
+            for width in range(int(self.image.get_width() / w)):
+                tile = pygame.Surface((w, h))
+                tile.set_colorkey((0, 0, 0))
+                tile.blit(self.image, (0, 0), (width * w, height * h, w, h))
+                tiles.append(tile)
+
+        return tiles
 
 
-global particle_images
-particle_images = {}
+class particle():
+    def __init__(self, startx, starty, col, pause):
+        self.x = startx
+        self.y = starty + random.randint(-7, 7)
+        self.col = col
+        self.sx = startx
+        self.sy = starty + random.randint(-7, 7)
+        self.pause = pause
 
+    def move(self):
+        if self.pause==0:
+            if self.x < self.sx - 50:
+                self.x = self.sx
+                self.y = self.sy + random.randint(-7, 7)
 
-def load_particle_images(path):
-    global particle_images
-    file_list = os.listdir(path)
-    for folder in file_list:
-        try:
-            img_list = os.listdir(path + '/' + folder)
-            img_list = particle_file_sort(img_list)
-            images = []
-            for img in img_list:
-                images.append(pygame.image.load(
-                    path + '/' + folder + '/' + img).convert())
-            particle_images[folder] = images.copy()
-        except:
-            pass
-
-
-class particle(object):
-
-    def __init__(self, x, y, particle_type, motion, decay_rate, start_frame, custom_color=None):
-        self.x = x
-        self.y = y
-        self.type = particle_type
-        self.motion = motion
-        self.decay_rate = decay_rate
-        self.color = custom_color
-        self.frame = start_frame
-
-    def draw(self, surface, scroll):
-        global particle_images
-        if self.frame > len(particle_images[self.type])-1:
-            self.frame = len(particle_images[self.type])-1
-        if self.color == None:
-            blit_center(surface, particle_images[self.type][int(
-                self.frame)], (self.x-scroll[0], self.y-scroll[1]))
+            else:
+                self.x-=1
         else:
-            blit_center(surface, swap_color(particle_images[self.type][int(
-                self.frame)], (255, 255, 255), self.color), (self.x-scroll[0], self.y-scroll[1]))
-
-    def update(self):
-        self.frame += self.decay_rate
-        running = True
-        if self.frame > len(particle_images[self.type])-1:
-            running = False
-        self.x += self.motion[0]
-        self.y += self.motion[1]
-        return running
-
+            self.pause-=1
 
 # other useful functions
 
@@ -564,3 +684,22 @@ def swap_color(img, old_c, new_c):
     surf.fill(new_c)
     surf.blit(img, (0, 0))
     return surf
+
+def get_scroll(true_scroll, player):
+        true_scroll[0] += (player.entity.x + player.entity.width / 2 - true_scroll[0] - WIDTH / 4) / 20
+        true_scroll[1] += (player.entity.y + player.entity.height / 2- true_scroll[1] - HEIGHT / 4) / 20
+
+        scroll = true_scroll.copy()
+        scroll[0] = int(scroll[0])  # ? Arrondie le scroll à l'entier pour que
+        scroll[1] = int(scroll[1])  # ? les tiles soient placées au pixel près
+
+        return true_scroll, scroll
+
+
+def load_sounds(path):
+    sounds = {}
+    files = os.listdir(path)
+    for file in files:
+        sounds[file.replace(".wav", "")] = pygame.mixer.Sound(path + file)
+
+    return sounds
