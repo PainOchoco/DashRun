@@ -1,7 +1,10 @@
 import pygame as pg
 import random
-import engine
-from settings import *
+from components.animation import *
+from components.settings import *
+from components.player import *
+from components.utils import *
+from components.world import *
 from pygame.locals import *
 
 class Game:
@@ -21,16 +24,16 @@ class Game:
         self.FULLSCREEN_MODE = FULLSCREEN_MODE
         self.DEBUG_MODE = DEBUG_MODE
 
-        self.tileset = engine.Tileset("./assets/textures/tileset.png")
-        engine.load_animations("./assets/textures/")
+        self.tileset = Tileset("./assets/textures/tileset.png")
+        load_animations("./assets/textures/")
         
-        self.sounds = engine.load_sounds("./assets/sounds/")
+        self.sounds = load_sounds("./assets/sounds/")
         self.sounds["jump"].set_volume(0.2)
 
 
     def new(self):
-        self.player = engine.player(X_START, Y_START, 11, 40, "player")
-        self.world = engine.world("./assets/maps/", 5, self.tileset)
+        self.player = Player(X_START, Y_START, 11, 40)
+        self.world = World("./assets/maps/", 5, self.tileset)
         self.world.generate()
         self.run()
 
@@ -38,19 +41,20 @@ class Game:
         self.playing = True
         
         pg.mixer.music.load("./assets/music.wav")
+        pg.mixer.music.set_volume(0.5)
         pg.mixer.music.play(-1)
 
         while self.playing:
             self.events()
 
             # ? Scroll
-            self.true_scroll, self.scroll = engine.get_scroll(self.true_scroll, self.player)
+            self.true_scroll, self.scroll = get_scroll(self.true_scroll, self.player)
+            if self.player.entity.y >= Y_LIMIT:
+                self.player.entity.set_pos(X_START, Y_START)
 
             self.draw()
             self.clock.tick(FPS)
 
-            if self.player.entity.y >= Y_LIMIT:
-                self.player.entity.set_pos(X_START, Y_START)
 
     def events(self):
         for event in pg.event.get():
@@ -64,21 +68,28 @@ class Game:
                 if event.key in RIGHT_KEYS:
                     self.player.moving_right = True
                 # ? <-
-                if event.key in LEFT_KEYS:
+                elif event.key in LEFT_KEYS:
                     self.player.moving_left = True
                 # ? ^
-                if event.key in UP_KEYS:
+                elif event.key in UP_KEYS:
                     if self.player.air_timer < 10:  # ? Le joueur peut sauter s'il est dans les airs moins de 6 frames
                         # ? Pour pouvoir sauter au bord des plateformes
                         self.player.momentum = -5
                         self.sounds["jump"].play()  # ? bioup
 
                 # ? V
-                if event.key in DOWN_KEYS:
+                elif event.key in DOWN_KEYS:
                     self.player.momentum += 15
 
+                # ? -->> Dash
+                elif event.key in DASH_KEYS and not self.player.dashing and self.player.dash_cooldown <= 0:
+                    self.player.dashing = True
+                    self.player.dash_timer = DASH_TIMER
+                    self.player.dash_cooldown = DASH_COOLDOWN
+
+
                 # ? Fullscreen mode
-                if event.key in FULLSCREEN_KEYS:
+                elif event.key in FULLSCREEN_KEYS:
                     self.FULLSCREEN_MODE = not self.FULLSCREEN_MODE
                     if self.FULLSCREEN_MODE:
                         self.screen = pg.display.set_mode(WINDOW_SIZE, pg.FULLSCREEN | pg.SCALED, 32)
@@ -86,7 +97,7 @@ class Game:
                         self.screen = pg.display.set_mode(WINDOW_SIZE, pg.RESIZABLE, 32)
 
                 # ? Debug mode
-                if event.key in DEBUG_KEYS:
+                elif event.key in DEBUG_KEYS:
                     self.DEBUG_MODE = not self.DEBUG_MODE
 
             # ? Touche lâchée
@@ -100,11 +111,20 @@ class Game:
 
 
     def draw(self):
-        self.display.fill((4, 44, 54))
+        self.display.fill(BG_COLOR)
         self.tile_rects = self.world.load_terrain(self.display, self.scroll)
         
         self.player.update(self.tile_rects)
         self.player.entity.display(self.display, self.scroll)
+
+        if self.player.dashing:
+            for i in range(DASH_TIMER - self.player.dash_timer):
+                if self.player.moving_right:
+                    self.player.entity.display(self.display, (self.scroll[0] + 5*i, self.scroll[1]), 255 - 35 * i)
+                elif self.player.moving_left:
+                    self.player.entity.display(self.display, (self.scroll[0] - 5*i, self.scroll[1]), 255 - 35 * i)
+
+
 
         self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), (0, 0))
         pg.display.flip()

@@ -2,6 +2,7 @@ from pygame.locals import *
 
 # ? Réglages & constantes générales
 TITLE = "Dash Run"
+BG_COLOR = (4, 44, 54)
 FPS = 60
 WIDTH = 640
 HEIGHT = 360
@@ -18,6 +19,7 @@ RIGHT_KEYS = [K_RIGHT, K_d]
 LEFT_KEYS = [K_LEFT, K_q]
 UP_KEYS = [K_UP, K_z, K_SPACE]
 DOWN_KEYS = [K_DOWN, K_s]
+DASH_KEYS = [K_LSHIFT, K_RSHIFT, K_TAB]
 FULLSCREEN_KEYS = [K_f, K_F11]
 DEBUG_KEYS = [K_F3]
 
@@ -26,6 +28,9 @@ DEBUG_KEYS = [K_F3]
 X_START = 50
 Y_START = 100
 SPEED = 2
-FRICTION = 0.5
-DASH_SPEED = 20
+GRAVITY = 0.35
+FRICTION = -0.12
+DASH_SPEED = 5
+DASH_TIMER = 20
+DASH_COOLDOWN = 120
 Y_LIMIT = 200
