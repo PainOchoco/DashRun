@@ -59,6 +59,8 @@ class Player(object):
             self.momentum = 3
 
     def dash(self):
+        self.dash_cooldown = DASH_COOLDOWN
+
         if self.moving_right:
             self.movement[0] += DASH_SPEED
         if self.moving_left:
@@ -68,7 +70,6 @@ class Player(object):
         
         if self.dash_timer == 0:
             self.dashing = False
-            self.dash_cooldown = DASH_COOLDOWN
 
     def check_collisions(self, tile_rects):
         self.collision_types = self.entity.move(self.movement, tile_rects)
@@ -76,6 +77,9 @@ class Player(object):
         if self.collision_types["bottom"]:
             self.momentum = 0
             self.air_timer = 0
+
+        if self.collision_types["top"]: # ? bonk
+            self.momentum = 3
 
         else:
             self.air_timer += 1

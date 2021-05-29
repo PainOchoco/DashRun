@@ -23,7 +23,8 @@ class World():
         self.map_files = os.listdir(self.path + "/parts/")
 
         for i in range(self.length):
-            map = self.load_map("/parts/" + random.choice(self.map_files))
+            random_map = random.choice(self.map_files)
+            map = self.load_map("/parts/" + random_map)
             self.maps.append(map)
             self.slice_map(map, self.offset)
             self.offset += (len(map[0]) / CHUNK_SIZE)
