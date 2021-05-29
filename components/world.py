@@ -5,7 +5,7 @@ import pygame as pg
 from components.settings import *
 
 class World():
-    def __init__(self, path, length, tileset):
+    def __init__(self, path, length, tileset, pb):
         self.length = length
         self.world_map = {}
         self.tile_rects = []
@@ -15,6 +15,7 @@ class World():
         self.tileset = tileset
         self.tile_list = tileset.get_tile_list(TILE_SIZE, TILE_SIZE)
         self.offset = 1
+        self.pb = pb
 
     def generate(self):
         start = self.load_map("start.csv")
@@ -51,11 +52,16 @@ class World():
                         tile_x = (target_x * CHUNK_SIZE + x_pos) * TILE_SIZE
                         tile_y = (target_y * CHUNK_SIZE + y_pos) * TILE_SIZE
 
+                        if tile_x == self.pb * TILE_SIZE and self.pb != 0: 
+                            # ? Dessine la barre du record personnel
+                            display.blit(self.tile_list[24], (tile_x - scroll[0] + 10 + 4*16, tile_y - scroll[1]))
+
                         display.blit(self.tile_list[tile], (tile_x - scroll[0] + 10, tile_y - scroll[1]))
 
                         if tile not in [4, 9, 14, 19, 23, 24, 28, 29]:
                             self.tile_rects.append(pg.Rect(tile_x, tile_y, TILE_SIZE, TILE_SIZE))
         return self.tile_rects
+
     
     def slice_map(self, map, offset = 0):
         height = int(len(map) / CHUNK_SIZE)

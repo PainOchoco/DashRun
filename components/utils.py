@@ -65,8 +65,9 @@ def load_sounds(path):
 
     return sounds
 
-def draw_text(self, text, font, color, pos, is_centered = True, return_text = False):
+def draw_text(self, text, font, color, pos, is_centered = True, return_text = False, opacity = 255):
     text_surf = self.fonts[font].render(text, True, color)
+    text_surf.set_alpha(opacity)
     text_rect = text_surf.get_rect()
     if is_centered:
         text_rect.center = pos

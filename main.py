@@ -51,7 +51,7 @@ class Game:
 
     def new(self):
         self.player = Player(X_START, Y_START, 11, 40)
-        self.world = World("./assets/maps/", BIG_CHUNK_SIZE, self.tileset)
+        self.world = World("./assets/maps/", BIG_CHUNK_SIZE, self.tileset, self.get_pb())
         self.world.generate()
         self.run()
 
@@ -178,7 +178,9 @@ class Game:
 
     def home_screen(self):
         self.display.fill(BG_COLOR)
-        draw_text(self, TITLE, "title", YELLOW, (WIDTH / 4, HEIGHT / 8))
+        for i in range(2):
+            draw_text(self, TITLE, "title", YELLOW, ((WIDTH / 4) - 7*i, HEIGHT / 8), opacity = 255 - 100 * i)
+
         draw_text(self, PRESS_KEY.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
         self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), [0, 0])
         pg.display.flip()
@@ -213,7 +215,7 @@ class Game:
         self.player.movement = [0, 0]
         self.player.entity.set_pos(X_START, Y_START)
 
-        self.world = World("./assets/maps/", BIG_CHUNK_SIZE, self.tileset)
+        self.world = World("./assets/maps/", BIG_CHUNK_SIZE, self.tileset, self.get_pb())
         self.world.generate()
         
         # ? Reset game stuff
