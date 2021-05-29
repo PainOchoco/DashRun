@@ -51,7 +51,6 @@ class World():
                         tile_x = (target_x * CHUNK_SIZE + x_pos) * TILE_SIZE
                         tile_y = (target_y * CHUNK_SIZE + y_pos) * TILE_SIZE
 
-                        # if tile != 4:
                         display.blit(self.tile_list[tile], (tile_x - scroll[0] + 10, tile_y - scroll[1]))
 
                         if tile not in [4, 9, 14, 19, 23, 24, 28, 29]:

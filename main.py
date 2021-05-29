@@ -26,6 +26,9 @@ class Game:
         self.render_offset = [0, 0]
         self.tile_rects = []
 
+        self.speed = SPEED
+        self.dash_speed = DASH_SPEED
+
         self.particles = Particle()
 
         self.FULLSCREEN_MODE = FULLSCREEN_MODE
@@ -65,7 +68,8 @@ class Game:
 
             # ? Scroll
             self.true_scroll, self.scroll = get_scroll(self.true_scroll, self.player, self.score)
-            
+            self.speed, self.dash_speed = get_speed(self.score)
+
             if self.player.entity.obj.rect.centery >= Y_LIMIT or (self.player.entity.obj.rect.centerx - self.scroll[0]) <= 0:
                 self.restart()
 
@@ -135,7 +139,7 @@ class Game:
             self.particles.add([0, 0 + i * (HEIGHT / 20)])
         self.particles.emit(self.display)
 
-        self.player.update(self.tile_rects)
+        self.player.update(self.tile_rects, self.speed, self.dash_speed)
         self.player.entity.display(self.display, self.scroll)
 
 
@@ -146,7 +150,7 @@ class Game:
         if round(self.player.entity.x - X_START) / 16 >= self.score:
             self.score = round((self.player.entity.x - X_START) / 16)
 
-        score(self, self.score)
+        score(self, self.score, self.get_pb())
 
         self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), self.render_offset)
         self.render_offset = [0, 0]

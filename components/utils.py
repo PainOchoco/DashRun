@@ -50,6 +50,12 @@ def get_scroll(true_scroll, player, score):
     scroll[1] = round(scroll[1])  # ? les tiles soient placées au pixel près
     return true_scroll, scroll
 
+def get_speed(score):
+    speed = SPEED + score / 100
+    dash_speed = DASH_SPEED + score / 100
+
+    return speed, dash_speed    
+
 
 def load_sounds(path):
     sounds = {}
@@ -110,5 +116,5 @@ def screen_shake(self):
     render_offset = [random_shake, random_shake]
     return render_offset
 
-def score(self, score):
-    draw_text(self, str(score), "main", LIGHT, (3, 3), False)
+def score(self, score, pb):
+    draw_text(self, str(score), "main", ORANGE if score > pb else LIGHT, (3, 3), False)

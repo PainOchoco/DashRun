@@ -14,8 +14,8 @@ class Player(object):
         self.movement = [0, 0]
         self.collision_types = {}
 
-    def update(self, tile_rects):
-        self.move()
+    def update(self, tile_rects, speed, dash_speed):
+        self.move(speed, dash_speed)
         self.check_collisions(tile_rects)
         self.animate()
 
@@ -40,7 +40,7 @@ class Player(object):
 
         self.entity.change_frame(1)
         
-    def move(self):
+    def move(self, speed, dash_speed):
         self.movement = [0, 0]
 
         if self.moving_right:
@@ -50,7 +50,7 @@ class Player(object):
         
         self.dash_cooldown -= 1
         if self.dashing:
-            self.dash()
+            self.dash(dash_speed)
 
         self.movement[1] += self.momentum
         self.momentum += 0.2
@@ -58,7 +58,7 @@ class Player(object):
         if self.momentum > 3:
             self.momentum = 3
 
-    def dash(self):
+    def dash(self, speed):
         self.dash_cooldown = DASH_COOLDOWN
 
         if self.moving_right:
