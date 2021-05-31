@@ -1,8 +1,9 @@
 import pygame as pg
 import random
 from components.animation import *
-from components.settings import *
+from components.particles import *
 from components.player import *
+from components.settings import *
 from components.utils import *
 from components.world import *
 from pygame.locals import *
@@ -176,34 +177,12 @@ class Game:
         with open("score.txt", "r") as file:
             return int(file.read())
 
-    def home_screen(self):
-        self.display.fill(BG_COLOR)
-        for i in range(2):
-            draw_text(self, TITLE, "title", YELLOW, ((WIDTH / 4) - 7*i, HEIGHT / 8), opacity = 255 - 100 * i)
-
-        draw_text(self, PRESS_KEY.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
-        self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), [0, 0])
-        pg.display.flip()
-        
-        wait_for_key(self, START_KEY)
-
-    def death_screen(self):
-        self.display.fill(BG_COLOR)
-        draw_text(self, random.choice(DEATH_MSG), "title", YELLOW, (WIDTH / 4, HEIGHT / 8))
-        draw_text(self, SCORE.format(self.score), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
-        draw_text(self, PB.format(self.get_pb()), "main", ORANGE if self.score == self.get_pb() else LIGHT, (WIDTH / 4, (HEIGHT / 4) + FONT_SIZE * 2))
-        draw_text(self, PRESS_KEY.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, (HEIGHT / 4) + FONT_SIZE * 4))
-        self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), [0, 0])
-        pg.display.flip()
-
-        wait_for_key(self, START_KEY)
-
 
     def restart(self):
         pg.mixer.music.stop()
         self.sounds["death"].play()
         self.save_score()
-        self.death_screen()
+        death_screen(self, START_KEY)
         # ? Reset player stuff
         self.player.moving_right = False
         self.player.moving_left = False
@@ -227,6 +206,6 @@ class Game:
 
 
 game = Game()
-game.home_screen()
+home_screen(game, START_KEY)
 while game.running:
     game.new()
