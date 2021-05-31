@@ -15,6 +15,10 @@ class Game:
         pg.event.set_allowed([QUIT, KEYDOWN, KEYUP])
         pg.display.set_caption(TITLE)
 
+        self.icon = pg.image.load("./assets/icon.png")
+        self.icon = pg.transform.smoothscale(self.icon, (96, 96))
+        pg.display.set_icon(self.icon)
+
         self.screen = pg.display.set_mode(WINDOW_SIZE, pg.RESIZABLE | pg.DOUBLEBUF, TILE_SIZE)
         self.display = pg.Surface(DISPLAY_SIZE)
 
@@ -149,7 +153,7 @@ class Game:
         dash_bar(self, (DASH_COOLDOWN - self.player.dash_cooldown) / DASH_COOLDOWN)
 
         self.player.entity.display(self.display, self.scroll)
-        
+
         if round(self.player.entity.x - X_START) / 16 >= self.score:
             self.score = round((self.player.entity.x - X_START) / 16)
 
