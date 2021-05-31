@@ -1,5 +1,7 @@
 # 🏃‍♂️💨 DashRun
 
+![DashRun Preview](./assets/preview.png)
+
 DashRun is an endless arcade platformer game where you play as a runner and aim to survive the longest.
 
 It was made for a school project by Lilian Scicluna and Matteo Planchet aka PainOchoco.

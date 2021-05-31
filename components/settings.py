@@ -40,8 +40,8 @@ START_KEY = K_RETURN
 
 
 # ? Réglages du joueur
-X_START = 50
-Y_START = 50
+X_START = 40
+Y_START = 40
 SPEED = 2
 DASH_SPEED = 5
 DASH_TIMER = 20

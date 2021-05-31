@@ -136,18 +136,20 @@ class Game:
         self.display.fill(BG_COLOR)
         self.tile_rects = self.world.load_terrain(self.display, self.scroll)
         
+        # ? Bordure rouge
         for i in range(10):
             self.particles.add([0, 0 + i * (HEIGHT / 20)])
         self.particles.emit(self.display)
 
         self.player.update(self.tile_rects, self.speed, self.dash_speed)
-        self.player.entity.display(self.display, self.scroll)
 
 
         if self.player.dashing:
             self.render_offset = dash_effect(self)
         dash_bar(self, (DASH_COOLDOWN - self.player.dash_cooldown) / DASH_COOLDOWN)
 
+        self.player.entity.display(self.display, self.scroll)
+        
         if round(self.player.entity.x - X_START) / 16 >= self.score:
             self.score = round((self.player.entity.x - X_START) / 16)
 
