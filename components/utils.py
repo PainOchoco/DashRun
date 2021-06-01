@@ -31,6 +31,7 @@ def get_scroll(true_scroll, player, score):
     scroll[1] = round(scroll[1])  # ? Tout soient placées au pixel près
     return true_scroll, scroll
 
+# ! Finalement non utilisé, incontrôlable
 def get_speed(score):
     """
     ### Description

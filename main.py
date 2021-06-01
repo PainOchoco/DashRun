@@ -73,7 +73,6 @@ class Game:
 
             # ? Scroll
             self.true_scroll, self.scroll = get_scroll(self.true_scroll, self.player, self.score)
-            self.speed, self.dash_speed = get_speed(self.score)
 
             if self.player.entity.obj.rect.centery >= Y_LIMIT or (self.player.entity.obj.rect.centerx - self.scroll[0]) <= 0:
                 self.restart()
@@ -145,7 +144,9 @@ class Game:
             self.particles.add([0, 0 + i * (HEIGHT / 20)])
         self.particles.emit(self.display)
 
-        self.player.update(self.tile_rects, self.speed, self.dash_speed)
+        print("Speed", self.speed)
+        print("Dash speed", self.dash_speed)
+        self.player.update(self.tile_rects)
 
 
         if self.player.dashing:

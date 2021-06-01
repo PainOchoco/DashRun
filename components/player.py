@@ -35,17 +35,15 @@ class Player(object):
         self.movement = [0, 0]
         self.collision_types = {}
 
-    def update(self, tile_rects, speed, dash_speed):
+    def update(self, tile_rects):
         """
         ### Description
         Mets à jour le joueur, le fait bouger, teste ses collisions avec la map et l'anime
 
         ### Arguments
         - tile_rects: `arr<Rect>` Liste de rectangles représentant les tiles de la map
-        - speed: `int` Vitesse de course du joueur
-        - dash_speed: `int` Vitesse de dash du joueur
         """
-        self.move(speed, dash_speed)
+        self.move()
         self.check_collisions(tile_rects)
         self.animate()
 
@@ -75,14 +73,10 @@ class Player(object):
 
         self.entity.change_frame(1)
         
-    def move(self, speed, dash_speed):
+    def move(self):
         """
         ### Description
-        Fait bouger le joueur en fonction de sa vitesse
-
-        ### Arguments
-        - speed: `int` Vitesse de course du joueur
-        - dash_speed: `int` Vitesse de dash du joueur
+        Fait bouger le joueur en fonction de ses inputs
         """
 
         self.movement = [0, 0]
@@ -94,7 +88,7 @@ class Player(object):
         
         self.dash_cooldown -= 1
         if self.dashing:
-            self.dash(dash_speed)
+            self.dash(DASH_SPEED)
 
         self.movement[1] += self.momentum
         self.momentum += 0.2
