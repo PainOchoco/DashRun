@@ -1,3 +1,5 @@
+# coding: utf8
+
 import math
 import os
 import random
@@ -98,9 +100,9 @@ def death_screen(self, key):
     while waiting:
         self.display.fill(BG_COLOR)
         draw_text(self, death_msg, "title", YELLOW, (WIDTH / 4, HEIGHT / 8))
-        draw_text(self, SCORE.format(self.score), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
-        draw_text(self, PB.format(self.get_pb()), "main", ORANGE if self.score == self.get_pb() else LIGHT, (WIDTH / 4, (HEIGHT / 4) + FONT_SIZE * 2))
-        draw_text(self, PRESS_KEY.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, (HEIGHT / 4) + FONT_SIZE * 4))
+        draw_text(self, SCORE_MSG.format(self.score), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
+        draw_text(self, PB_MSG.format(self.get_pb()), "main", ORANGE if self.score == self.get_pb() else LIGHT, (WIDTH / 4, (HEIGHT / 4) + FONT_SIZE * 2))
+        draw_text(self, PRESS_KEY_MSG.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, (HEIGHT / 4) + FONT_SIZE * 4))
         self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), [0, 0])
         pg.display.flip()
         self.clock.tick(FPS)
@@ -126,7 +128,7 @@ def home_screen(self, key):
         self.display.fill(BG_COLOR)
         draw_text(self, TITLE, "title", YELLOW, ((WIDTH / 4), HEIGHT / 8))
 
-        draw_text(self, PRESS_KEY.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
+        draw_text(self, PRESS_KEY_MSG.format(pg.key.name(START_KEY)), "main", LIGHT, (WIDTH / 4, HEIGHT / 4))
         self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), self.render_offset)
         pg.display.flip()
         
@@ -187,6 +189,9 @@ def screen_shake():
     """
     ### Description
     Bouge l'écran de manière aléatoire pour donner un effet tremblement
+
+    ### Renvoie
+    - render_offset: `tuple` Décalage aléatoire en X et Y à appliquer au rendu du jeu
     """
     random_shake = random.randint(0, SCREEN_SHAKE_FORCE) - SCREEN_SHAKE_FORCE / 2
     render_offset = [random_shake, random_shake]

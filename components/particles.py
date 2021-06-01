@@ -1,4 +1,6 @@
 import pygame as pg
+# coding: utf8
+
 import random
 from components.settings import *
 

@@ -1,3 +1,5 @@
+# coding: utf8
+
 from components.entity import *
 from components.settings import *
 

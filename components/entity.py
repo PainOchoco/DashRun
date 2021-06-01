@@ -1,3 +1,5 @@
+# coding: utf8
+
 import pygame as pg
 import math
 from components.settings import *

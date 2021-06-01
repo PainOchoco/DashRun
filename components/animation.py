@@ -1,6 +1,6 @@
-import pygame as pg
+# coding: utf8
 
-# ? Animations !
+import pygame as pg
 
 # ? La base de données d'animations s'occupe de répertorier les images des animations,
 # * Format : {'path': Surface}

@@ -1,3 +1,5 @@
+# coding: utf8
+
 from pygame.locals import *
 
 # ? Réglages & constantes générales
@@ -15,11 +17,11 @@ FULLSCREEN_MODE = False
 DEBUG_MODE = False
 PARTICLE_RADIUS = 5
 
-# ? String
-PRESS_KEY = "Press [ {} ] to start!"
+# ? Messages
+PRESS_KEY_MSG = "Press [ {} ] to run!"
 DEATH_MSG = ["You died!", "Game Over", "D34D!", "G4M3 0V3R", "What have you done?", "Rest in peace", "You're dead. Again.", "Time to reload..."]
-SCORE = "Score: {}"
-PB = "Personal Best: {}"
+SCORE_MSG = "Score: {}"
+PB_MSG = "Personal Best: {}"
 
 # ? Couleurs
 BG_COLOR = (4, 44, 54)
@@ -36,7 +38,7 @@ DOWN_KEYS = [K_DOWN, K_s]
 DASH_KEYS = [K_LSHIFT, K_RSHIFT, K_TAB]
 FULLSCREEN_KEYS = [K_f, K_F11]
 DEBUG_KEYS = [K_F3]
-START_KEY = K_RETURN
+START_KEY = K_SPACE
 
 
 # ? Réglages du joueur
@@ -45,7 +47,7 @@ Y_START = 40
 SPEED = 2
 DASH_SPEED = 5
 DASH_TIMER = 20
-DASH_COOLDOWN = 120
+DASH_COOLDOWN = 240
 DASH_BAR_SIZE = (50, 10)
 DASH_BAR_POS = (3, (HEIGHT / 2) - DASH_BAR_SIZE[1] - 3)
 SCORE_POS = (3, 3)

@@ -8,20 +8,14 @@ It was made for a school project by Lilian Scicluna and Matteo Planchet aka Pain
 
 It is written in Python with the library Pygame. It was a school project but i'm planning on improving it (maybe a multiplayer feature?).
 
-## 🛠 Tools Used
+## 🎮 How to play
 
--   [Pygame](https://pygame.org) - Game Library
--   [GIMP](https://www.gimp.org) - Image editing
--   [Tiled](https://www.mapeditor.org/) - Level editing
--   [PyInstaller](https://www.pyinstaller.org/) - Stand-alone executables builder
+The game is only available on Windows for the moment.
 
-## 🎨 Assets Used
-
--   Tileset [Morning Adventures](https://spriteshift.itch.io/morning-adventures-tileset) by Spriteshift
--   Music [Can't Stop Won't Stop](https://www.youtube.com/watch?v=gELKqteThq8) by AdhesiveWombat
--   Font [Vermin Vibes 1989](https://www.dafont.com/fr/vermin-vibes-1989.font) by NAL
--   Font [Superstar](https://www.dafont.com/fr/superstar-2.font)
--   Soundpack [The Essential Retro Video Game Sound Effects Collection](https://opengameart.org/content/512-sound-effects-8-bit-style) by SubspaceAudio
+1. Download the DashRun.zip in the latest release
+2. Extract it
+3. Execute main.exe
+4. Check controls right below
 
 ## 🕹 Controls
 
@@ -44,3 +38,18 @@ I'll put top scores here! Send me a screenshot of your best score on Discord @Pa
 On your marks, ready? Go !
 
 1. PainOchoco - `1100`
+
+## 🛠 Tools Used
+
+-   [Pygame](https://pygame.org) - Game Library
+-   [GIMP](https://www.gimp.org) - Image editing
+-   [Tiled](https://www.mapeditor.org/) - Level editing
+-   [PyInstaller](https://www.pyinstaller.org/) - Stand-alone executables builder
+
+## 🎨 Assets Used
+
+-   Tileset [Morning Adventures](https://spriteshift.itch.io/morning-adventures-tileset) by Spriteshift
+-   Music [Can't Stop Won't Stop](https://www.youtube.com/watch?v=gELKqteThq8) by AdhesiveWombat
+-   Font [Vermin Vibes 1989](https://www.dafont.com/fr/vermin-vibes-1989.font) by NAL
+-   Font [Superstar](https://www.dafont.com/fr/superstar-2.font)
+-   Soundpack [The Essential Retro Video Game Sound Effects Collection](https://opengameart.org/content/512-sound-effects-8-bit-style) by SubspaceAudio

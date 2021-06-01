@@ -1,3 +1,5 @@
+# coding: utf8
+
 import pygame as pg
 import random
 from components.animation import *
@@ -144,27 +146,34 @@ class Game:
             self.particles.add([0, 0 + i * (HEIGHT / 20)])
         self.particles.emit(self.display)
 
-        print("Speed", self.speed)
-        print("Dash speed", self.dash_speed)
         self.player.update(self.tile_rects)
 
-
+        # ? Effet de dash
         if self.player.dashing:
             self.render_offset = dash_effect(self)
+
+        # ? Affichage de la barre de dash
         dash_bar(self, (DASH_COOLDOWN - self.player.dash_cooldown) / DASH_COOLDOWN)
 
+        # ? Affichage du joueur
         self.player.entity.display(self.display, self.scroll)
 
+        # ? Fait en sorte que le score du joueur soit le plus loin où le joueur est allé
+        # ? C'est à dire que s'il recule, le score ne descendra pas    
         if round(self.player.entity.x - X_START) / 16 >= self.score:
             self.score = round((self.player.entity.x - X_START) / 16)
 
+        # ? Affichage du score
         score(self, self.score, self.get_pb())
 
+        # ? Affichage du jeu sur l'écran 
         self.screen.blit(pg.transform.scale(self.display, WINDOW_SIZE), self.render_offset)
         self.render_offset = [0, 0]
 
         pg.display.flip()
 
+        # ? Debug mode, pour voir les positions du joueur et le FPS 
+        # ? (marche pas très bien car ça fait lagger le jeu de print)
         if (self.DEBUG_MODE):
             debug_data = [
                 "X\t{}".format(self.player.entity.x),
@@ -174,17 +183,18 @@ class Game:
             print("\n[DEBUG]")
             print("\n".join(debug_data))
 
+    # ? Sauvegarde le score (si c'est un pb) dans score.txt
     def save_score(self):
         if self.get_pb() < self.score:
             with open("score.txt", "w") as file:
                 file.write(str(self.score))
 
-
+    # ? Lit le pb du joueur
     def get_pb(self):
         with open("score.txt", "r") as file:
             return int(file.read())
 
-
+    # ? Restart quand le joueur meurt, plein de variables sont remises à 0
     def restart(self):
         pg.mixer.music.stop()
         self.sounds["death"].play()
@@ -209,8 +219,6 @@ class Game:
         self.true_scroll = [0, 0]
         self.scroll = [0, 0]
         pg.mixer.music.play(-1)
-
-
 
 game = Game()
 home_screen(game, START_KEY)
